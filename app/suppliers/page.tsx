@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function SuppliersPage() {
   // Simplified query without relations to avoid errors if table doesn't exist
-  let allSuppliers = [];
+  let allSuppliers: any[] = [];
   try {
     allSuppliers = await db.query.suppliers.findMany({
       orderBy: (suppliers, { desc }) => [desc(suppliers.createdAt)],
