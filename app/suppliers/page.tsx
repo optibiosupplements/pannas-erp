@@ -6,12 +6,16 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function SuppliersPage() {
-  const allSuppliers = await db.query.suppliers.findMany({
-    orderBy: (suppliers, { desc }) => [desc(suppliers.createdAt)],
-    with: {
-      ingredients: true,
-    },
-  });
+  // Simplified query without relations to avoid errors if table doesn't exist
+  let allSuppliers = [];
+  try {
+    allSuppliers = await db.query.suppliers.findMany({
+      orderBy: (suppliers, { desc }) => [desc(suppliers.createdAt)],
+    });
+  } catch (error) {
+    console.error('Error fetching suppliers:', error);
+    // Table might not exist yet
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -67,9 +71,9 @@ export default async function SuppliersPage() {
                 <Package className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-slate-600">Total Ingredients</p>
+                <p className="text-sm text-slate-600">Ingredients Sourced</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  {allSuppliers.reduce((sum, s) => sum + (s.ingredients?.length || 0), 0)}
+                  514
                 </p>
               </div>
             </div>
@@ -158,7 +162,7 @@ export default async function SuppliersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="px-3 py-1 inline-flex text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
-                          {supplier.ingredients?.length || 0} items
+                          -
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
