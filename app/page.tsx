@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import Navigation from '@/components/Navigation';
+import { ArrowRight, Mail, Package, Users, TrendingUp } from 'lucide-react';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
-import { ArrowRight, Mail, Package, Users, TrendingUp } from 'lucide-react';
 
 export default async function Dashboard() {
   // Get dashboard data
@@ -22,61 +23,7 @@ export default async function Dashboard() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header - Clear visual hierarchy */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Panna&apos;s ERP</h1>
-              <p className="text-slate-600 mt-1">Nutraceutical Brokerage Management</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm text-slate-500">Welcome back,</p>
-                <p className="font-semibold text-slate-900">Panna</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-      
-      {/* Navigation - Consistent and predictable */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex gap-1">
-            <Link 
-              href="/" 
-              className="px-4 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
-            >
-              Dashboard
-            </Link>
-            <Link 
-              href="/rfqs" 
-              className="px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-b-2 border-transparent transition-colors"
-            >
-              RFQs
-            </Link>
-            <Link 
-              href="/products" 
-              className="px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-b-2 border-transparent transition-colors"
-            >
-              Products
-            </Link>
-            <Link 
-              href="/customers" 
-              className="px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-b-2 border-transparent transition-colors"
-            >
-              Customers
-            </Link>
-            <Link 
-              href="/ingredients" 
-              className="px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-b-2 border-transparent transition-colors"
-            >
-              Ingredients
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
       
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Metrics - Visual hierarchy with icons and color coding */}
