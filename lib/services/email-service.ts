@@ -1,6 +1,11 @@
 import sgMail from '@sendgrid/mail';
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+// Only initialize SendGrid if API key is valid
+const SENDGRID_ENABLED = process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.');
+
+if (SENDGRID_ENABLED) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+}
 
 export async function sendConfirmationEmail(
   customerEmail: string,
@@ -41,6 +46,12 @@ This is an automated confirmation. Please do not reply to this email.`,
       </div>
     `,
   };
+
+  // Skip sending if SendGrid is not properly configured
+  if (!SENDGRID_ENABLED) {
+    console.log(`SendGrid not configured - skipping confirmation email to ${customerEmail} for ${rfqNumber}`);
+    return { success: false, error: 'Email service not configured' };
+  }
 
   try {
     await sgMail.send(msg);
