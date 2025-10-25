@@ -22,14 +22,15 @@ export async function POST(request: NextRequest) {
     // Insert new ingredients
     const imported = await db.insert(ingredients).values(
       data.ingredients.map((ing: any) => ({
-        ingredientId: ing.ingredient_id || ing.ingredientId,
-        name: ing.name || ing.ingredient_name,
+        ingredientName: ing.name || ing.ingredient_name || 'Unknown',
+        commonName: ing.common_name || null,
         category: ing.category || 'Other',
+        form: ing.form || null,
         supplier: ing.supplier || 'Unknown',
-        costPerKg: parseFloat(ing.cost_per_kg || ing.costPerKg || 0),
-        assayPercentage: parseFloat(ing.assay_percentage || ing.assayPercentage || 100),
-        labelClaimActive: ing.label_claim_active === true || ing.labelClaimActive === true,
-        multiComponent: ing.multi_component === true || ing.multiComponent === true,
+        costPerKg: ing.cost_per_kg ? String(ing.cost_per_kg) : '0',
+        assayPercentage: ing.assay_percentage ? String(ing.assay_percentage) : '100',
+        moq: ing.moq || null,
+        leadTimeDays: ing.lead_time_days || null,
         notes: ing.notes || null,
       }))
     ).returning();
