@@ -8,6 +8,20 @@
       "when": 1761399483824,
       "tag": "0000_lucky_loa",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1761419743964,
+      "tag": "0001_pink_jimmy_woo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761419917679,
+      "tag": "0002_omniscient_roulette",
+      "breakpoints": true
     }
   ]
 }

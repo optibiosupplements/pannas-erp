@@ -24,6 +24,21 @@ export const customers = pgTable('customers', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Suppliers table
+export const suppliers = pgTable('suppliers', {
+  id: serial('id').primaryKey(),
+  companyName: text('company_name').notNull(),
+  contactName: text('contact_name'),
+  email: text('email'),
+  phone: text('phone'),
+  address: text('address'),
+  website: text('website'),
+  notes: text('notes'),
+  status: text('status').notNull().default('Active'), // Active, Inactive
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Manufacturers table
 export const manufacturers = pgTable('manufacturers', {
   id: serial('id').primaryKey(),
@@ -84,14 +99,18 @@ export const ingredients = pgTable('ingredients', {
   id: serial('id').primaryKey(),
   ingredientName: text('ingredient_name').notNull(),
   commonName: text('common_name'),
+  synonyms: jsonb('synonyms'), // Array of alternative names/aliases
   category: text('category'), // Vitamin, Mineral, Herb, Amino Acid, etc.
   form: text('form'), // Powder, Liquid, Extract, etc.
   assayPercentage: decimal('assay_percentage', { precision: 5, scale: 2 }),
   costPerKg: decimal('cost_per_kg', { precision: 10, scale: 2 }),
-  supplier: text('supplier'),
+  supplierId: integer('supplier_id').references(() => suppliers.id), // Foreign key to suppliers
+  supplierName: text('supplier_name'), // Denormalized for quick access
   moq: integer('moq'), // Minimum Order Quantity
   leadTimeDays: integer('lead_time_days'),
+  casNumber: text('cas_number'), // Chemical Abstracts Service number for precise identification
   notes: text('notes'),
+  searchVector: text('search_vector'), // For full-text search optimization
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -172,5 +191,16 @@ export const emailLogsRelations = relations(emailLogs, ({ one }) => ({
     fields: [emailLogs.rfqId],
     references: [rfqs.id],
   }),
+}));
+
+export const ingredientsRelations = relations(ingredients, ({ one }) => ({
+  supplier: one(suppliers, {
+    fields: [ingredients.supplierId],
+    references: [suppliers.id],
+  }),
+}));
+
+export const suppliersRelations = relations(suppliers, ({ many }) => ({
+  ingredients: many(ingredients),
 }));
 
