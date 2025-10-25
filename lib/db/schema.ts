@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, decimal, jsonb, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, integer, decimal, jsonb } from 'drizzle-orm/pg-core';
 
 // Users table
 export const users = pgTable('users', {
@@ -136,4 +136,41 @@ export const backgroundJobs = pgTable('background_jobs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   completedAt: timestamp('completed_at'),
 });
+
+
+
+// Relations
+import { relations } from 'drizzle-orm';
+
+export const rfqsRelations = relations(rfqs, ({ one }) => ({
+  customer: one(customers, {
+    fields: [rfqs.customerId],
+    references: [customers.id],
+  }),
+}));
+
+export const opportunitiesRelations = relations(opportunities, ({ one }) => ({
+  customer: one(customers, {
+    fields: [opportunities.customerId],
+    references: [customers.id],
+  }),
+  rfq: one(rfqs, {
+    fields: [opportunities.rfqId],
+    references: [rfqs.id],
+  }),
+}));
+
+export const productSpecificationsRelations = relations(productSpecifications, ({ one }) => ({
+  rfq: one(rfqs, {
+    fields: [productSpecifications.rfqId],
+    references: [rfqs.id],
+  }),
+}));
+
+export const emailLogsRelations = relations(emailLogs, ({ one }) => ({
+  rfq: one(rfqs, {
+    fields: [emailLogs.rfqId],
+    references: [rfqs.id],
+  }),
+}));
 

@@ -125,7 +125,7 @@ If you cannot determine certain fields, use reasonable defaults or null.`;
     await db.update(rfqs)
       .set({ 
         status: 'In Review',
-        productDescription: result.products?.map((p: any) => p.productName).join(', '),
+        productDescription: result.products?.map((p: { productName: string }) => p.productName).join(', '),
       })
       .where(eq(rfqs.id, rfqId));
     

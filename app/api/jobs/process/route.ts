@@ -5,7 +5,7 @@ import { eq, and, lte } from 'drizzle-orm';
 import { processRFQWithAI } from '@/lib/services/ai-processor';
 import { sendConfirmationEmail } from '@/lib/services/email-service';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Get pending jobs that are ready to run
     const now = new Date();
@@ -28,24 +28,27 @@ export async function POST(request: NextRequest) {
         
         let result;
         
+        // Type assertion for payload
+        const payload = job.payload as any;
+        
         switch (job.jobType) {
           case 'process_rfq':
-            result = await processRFQWithAI(job.payload.rfqId);
+            result = await processRFQWithAI(payload.rfqId);
             break;
             
           case 'send_confirmation':
             result = await sendConfirmationEmail(
-              job.payload.customerEmail,
-              job.payload.rfqNumber || 'RFQ'
+              payload.customerEmail,
+              payload.rfqNumber || 'RFQ'
             );
             
             // Log the outbound email
             await db.insert(emailLogs).values({
-              rfqId: job.payload.rfqId,
+              rfqId: payload.rfqId,
               direction: 'Outbound',
               fromEmail: process.env.BUSINESS_EMAIL || 'quotes@optibiosupplements.com',
-              toEmail: job.payload.customerEmail,
-              subject: `RFQ Received - ${job.payload.rfqNumber}`,
+              toEmail: payload.customerEmail,
+              subject: `RFQ Received - ${payload.rfqNumber}`,
               body: 'Confirmation email sent',
               status: 'Sent',
             });
@@ -65,17 +68,17 @@ export async function POST(request: NextRequest) {
         
         results.push({ jobId: job.id, status: 'completed', result });
         
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Mark as failed
         await db.update(backgroundJobs)
           .set({ 
             status: 'Failed',
-            error: error.message,
-            attempts: job.attempts + 1,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            attempts: (job.attempts || 0) + 1,
           })
           .where(eq(backgroundJobs.id, job.id));
         
-        results.push({ jobId: job.id, status: 'failed', error: error.message });
+        results.push({ jobId: job.id, status: 'failed', error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
     
