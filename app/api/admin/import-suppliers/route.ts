@@ -1,29 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { suppliers, ingredients } from '@/lib/db/schema';
-import { sql, eq, ilike } from 'drizzle-orm';
-
-// Hardcoded ingredient-supplier mappings (from pasted_content_4.txt)
-const INGREDIENT_SUPPLIER_MAPPINGS = `Hydrangea  Root powder	Amazonicas	RM001
-Coral calcium	A Better Ingredient, LLC	RM002
-Coral Calcium Powder (Food Grade)	A Better Ingredient, LLC	RM003
-Berberine HCL 97%	Abinopharma Inc	RM004
-Nicotinamide Riboside Chloride Powder	Abinopharma Inc	RM005
-Trans-Pterostilbene 99%	Abinopharma Inc	RM006
-Vitamin B12 (as Hydroxocobalamin)	Accobio USA, Inc.	RM007
-Iron (Bisglycinate) 20%	Actylis/Talus Mineral Company	RM008
-Magnesium (Magnesium Glycinate 20%)	Actylis/Talus Mineral Company	RM009
-Magnesium as (Magnesium Citrate) 30%	Actylis/Talus Mineral Company	RM010
-Sodium Selenite 1%	Actylis/Talus Mineral Company	RM011
-Magnesium (Magnesium Glycinate 30%)	Actylis/Talus Mineral Company	RM012
-Organic Monk Fruit Extract V50%	Agroindustrias Amazonicas, N.A	RM013
-Sarsaparilla (Smilax Glabra) Root Powder	Agroindustrias Amazonicas, N.A	RM014`.split('\n');
+import { eq, ilike } from 'drizzle-orm';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🔗 Starting supplier import...');
     
-    const lines = INGREDIENT_SUPPLIER_MAPPINGS.filter(line => line.trim().length > 0);
+    // Read the mapping file
+    const filePath = path.join(process.cwd(), 'data', 'ingredient-supplier-mapping.txt');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const lines = fileContent.split('\n').filter(line => line.trim().length > 0);
     
     let suppliersCreated = 0;
     let ingredientsLinked = 0;
@@ -64,7 +53,9 @@ export async function POST(request: NextRequest) {
           
           supplierId = newSupplier.id;
           suppliersCreated++;
-          logs.push(`✓ Created supplier: ${supplierName}`);
+          if (suppliersCreated <= 10) {
+            logs.push(`✓ Created supplier: ${supplierName}`);
+          }
         }
         
         supplierCache.set(supplierName, supplierId);
@@ -139,6 +130,7 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
