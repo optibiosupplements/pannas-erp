@@ -22,6 +22,13 @@
       "when": 1761419917679,
       "tag": "0002_omniscient_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1761423144360,
+      "tag": "0003_eager_ender_wiggin",
+      "breakpoints": true
     }
   ]
 }

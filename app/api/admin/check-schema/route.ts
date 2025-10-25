@@ -12,7 +12,7 @@ export async function GET() {
       ORDER BY table_name;
     `);
     
-    const tables = result.rows.map((row: any) => row.table_name);
+    const tables = (result as any).map((row: any) => row.table_name);
     
     return NextResponse.json({
       success: true,

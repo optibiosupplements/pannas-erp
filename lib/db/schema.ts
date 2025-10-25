@@ -28,6 +28,7 @@ export const customers = pgTable('customers', {
 export const suppliers = pgTable('suppliers', {
   id: serial('id').primaryKey(),
   companyName: text('company_name').notNull(),
+  supplierType: text('supplier_type'), // Raw Material Supplier, Contract Manufacturer, etc.
   contactName: text('contact_name'),
   email: text('email'),
   phone: text('phone'),
@@ -97,6 +98,7 @@ export const productSpecifications = pgTable('product_specifications', {
 // Master Ingredients table
 export const ingredients = pgTable('ingredients', {
   id: serial('id').primaryKey(),
+  ingredientId: text('ingredient_id').unique(), // e.g., RM001, RM002
   ingredientName: text('ingredient_name').notNull(),
   commonName: text('common_name'),
   synonyms: jsonb('synonyms'), // Array of alternative names/aliases

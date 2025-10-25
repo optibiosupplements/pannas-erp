@@ -6,7 +6,7 @@ import { SUPPLIER_MAPPINGS } from '@/lib/data/supplier-mappings';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔗 Starting supplier import...');
+    console.log('🔗 Starting supplier and ingredient import...');
     
     let suppliersCreated = 0;
     let ingredientsLinked = 0;
@@ -17,7 +17,16 @@ export async function POST(request: NextRequest) {
     logs.push(`Found ${SUPPLIER_MAPPINGS.length} ingredient-supplier mappings`);
     
     for (const mapping of SUPPLIER_MAPPINGS) {
-      const { ingredient: ingredientName, supplier: supplierName, sku: skuCode } = mapping;
+      const { 
+        ingredient: ingredientName, 
+        supplier: supplierName, 
+        sku: ingredientId,
+        category,
+        price,
+        potency,
+        active,
+        supplierType
+      } = mapping;
       
       if (!ingredientName || !supplierName) continue;
       
@@ -37,72 +46,94 @@ export async function POST(request: NextRequest) {
         } else {
           const [newSupplier] = await db.insert(suppliers).values({
             companyName: supplierName,
+            supplierType: supplierType || 'Raw Material Supplier',
             status: 'Active',
           }).returning();
           
           supplierId = newSupplier.id;
           suppliersCreated++;
           if (suppliersCreated <= 10) {
-            logs.push(`✓ Created supplier: ${supplierName}`);
+            logs.push(`✓ Created supplier: ${supplierName} (${supplierType})`);
           }
         }
         
         supplierCache.set(supplierName, supplierId);
       }
       
-      // Find and link ingredient
+      // Find and update or create ingredient
       let matchingIngredients = await db.select()
         .from(ingredients)
         .where(eq(ingredients.ingredientName, ingredientName))
         .limit(1);
       
+      if (matchingIngredients.length === 0 && ingredientId) {
+        // Try matching by ingredient ID
+        matchingIngredients = await db.select()
+          .from(ingredients)
+          .where(eq(ingredients.ingredientId, ingredientId))
+          .limit(1);
+      }
+      
       if (matchingIngredients.length === 0) {
+        // Fuzzy match by name
         matchingIngredients = await db.select()
           .from(ingredients)
           .where(ilike(ingredients.ingredientName, `%${ingredientName}%`))
           .limit(1);
       }
       
-      if (matchingIngredients.length === 0 && ingredientName.length > 5) {
-        matchingIngredients = await db.select()
-          .from(ingredients)
-          .where(ilike(ingredients.commonName, `%${ingredientName}%`))
-          .limit(1);
-      }
+      const priceNum = price ? parseFloat(price.replace('$', '').replace(',', '')) : null;
+      const potencyNum = potency ? parseFloat(potency) : null;
       
       if (matchingIngredients.length > 0) {
+        // Update existing ingredient
         const ingredient = matchingIngredients[0];
         
         await db.update(ingredients)
           .set({
+            ingredientId: ingredientId || ingredient.ingredientId,
             supplierId: supplierId,
             supplierName: supplierName,
-            notes: skuCode ? `SKU: ${skuCode}${ingredient.notes ? ' | ' + ingredient.notes : ''}` : ingredient.notes,
+            category: category || ingredient.category,
+            costPerKg: priceNum ? priceNum.toString() : ingredient.costPerKg,
+            assayPercentage: potencyNum ? potencyNum.toString() : ingredient.assayPercentage,
+            notes: active === 'TRUE' ? 'Active ingredient' : ingredient.notes,
             updatedAt: new Date(),
           })
           .where(eq(ingredients.id, ingredient.id));
         
         ingredientsLinked++;
-        
-        if (ingredientsLinked % 50 === 0) {
-          logs.push(`→ Linked ${ingredientsLinked} ingredients so far...`);
-        }
       } else {
-        ingredientsNotFound++;
-        if (ingredientsNotFound <= 10) {
-          logs.push(`⚠ No match found for: "${ingredientName}" (Supplier: ${supplierName})`);
-        }
+        // Create new ingredient
+        await db.insert(ingredients).values({
+          ingredientId: ingredientId,
+          ingredientName: ingredientName,
+          category: category,
+          supplierId: supplierId,
+          supplierName: supplierName,
+          costPerKg: priceNum ? priceNum.toString() : null,
+          assayPercentage: potencyNum ? potencyNum.toString() : null,
+          notes: active === 'TRUE' ? 'Active ingredient' : null,
+        });
+        
+        ingredientsLinked++;
+      }
+      
+      if (ingredientsLinked % 50 === 0) {
+        logs.push(`→ Processed ${ingredientsLinked} ingredients so far...`);
       }
     }
     
     logs.push('');
     logs.push('✅ Import complete!');
     logs.push(`   - Suppliers created: ${suppliersCreated}`);
-    logs.push(`   - Ingredients linked: ${ingredientsLinked}`);
+    logs.push(`   - Ingredients processed: ${ingredientsLinked}`);
     logs.push(`   - Ingredients not found: ${ingredientsNotFound}`);
     
     const allSuppliers = await db.select().from(suppliers);
+    const allIngredients = await db.select().from(ingredients);
     logs.push(`   - Total suppliers in database: ${allSuppliers.length}`);
+    logs.push(`   - Total ingredients in database: ${allIngredients.length}`);
     
     return NextResponse.json({
       success: true,
@@ -110,6 +141,7 @@ export async function POST(request: NextRequest) {
       ingredientsLinked,
       ingredientsNotFound,
       totalSuppliers: allSuppliers.length,
+      totalIngredients: allIngredients.length,
       logs,
     });
     
