@@ -35,7 +35,7 @@ export default function Navigation() {
     if (href === '/') {
       return pathname === '/';
     }
-    return pathname.startsWith(href);
+    return pathname?.startsWith(href) || false;
   };
 
   return (
@@ -77,6 +77,7 @@ export default function Navigation() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-lg hover:bg-blue-500 transition-colors"
+              aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -127,6 +128,7 @@ export default function Navigation() {
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Close menu"
               >
                 <X className="w-5 h-5" />
               </button>
