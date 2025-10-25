@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { backgroundJobs, emailLogs } from '@/lib/db/schema';
 import { eq, and, lte } from 'drizzle-orm';
 import { processRFQWithAI } from '@/lib/services/ai-processor';
-import { sendConfirmationEmail } from '@/lib/services/email-service';
+import { sendConfirmationEmail } from '@/lib/services/mailgun-service';
 
 export async function POST() {
   try {
