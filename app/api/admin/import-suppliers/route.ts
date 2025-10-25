@@ -2,17 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { suppliers, ingredients } from '@/lib/db/schema';
 import { eq, ilike } from 'drizzle-orm';
-import * as fs from 'fs';
-import * as path from 'path';
+import { SUPPLIER_MAPPINGS } from '@/lib/data/supplier-mappings';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🔗 Starting supplier import...');
-    
-    // Read the mapping file
-    const filePath = path.join(process.cwd(), 'data', 'ingredient-supplier-mapping.txt');
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const lines = fileContent.split('\n').filter(line => line.trim().length > 0);
     
     let suppliersCreated = 0;
     let ingredientsLinked = 0;
@@ -20,15 +14,10 @@ export async function POST(request: NextRequest) {
     const supplierCache = new Map<string, number>();
     const logs: string[] = [];
     
-    logs.push(`Found ${lines.length} ingredient-supplier mappings`);
+    logs.push(`Found ${SUPPLIER_MAPPINGS.length} ingredient-supplier mappings`);
     
-    for (const line of lines) {
-      const parts = line.split('\t');
-      if (parts.length < 2) continue;
-      
-      const ingredientName = parts[0].trim();
-      const supplierName = parts[1].trim();
-      const skuCode = parts[2]?.trim() || null;
+    for (const mapping of SUPPLIER_MAPPINGS) {
+      const { ingredient: ingredientName, supplier: supplierName, sku: skuCode } = mapping;
       
       if (!ingredientName || !supplierName) continue;
       
