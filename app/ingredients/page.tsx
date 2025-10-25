@@ -105,7 +105,7 @@ export default async function IngredientsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                      {ingredient.supplier}
+                      {ingredient.supplierName}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">
                       ${ingredient.costPerKg}
